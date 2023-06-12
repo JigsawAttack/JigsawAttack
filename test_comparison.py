@@ -116,6 +116,6 @@ def comparison(test_times,dataset,\
         with open("results/test_comparison/Graphm/test_1000_"+dataset+"_"+str(i)+".pkl", "wb") as f:
             pickle.dump(Result,f)
 if __name__ == "__main__":
-    comparison(30,"enron",Query_number_per_week=[100,500,25000],Kws_uni_size=[500,1000,2000],observed_time=50,eta=50)
-    comparison(30,"lucene",Query_number_per_week=[100,500,25000],Kws_uni_size=[500,1000,2000],observed_time=50,eta=50)
+    comparison(30,"enron",Query_number_per_week=[100,500,2500],Kws_uni_size=[500,1000,2000],observed_time=50,eta=50)
+    comparison(30,"lucene",Query_number_per_week=[100,500,2500],Kws_uni_size=[500,1000,2000],observed_time=50,eta=50)
     comparison(30,"wiki",Query_number_per_week=[1000,5000,10000],Kws_uni_size=[1000,3000,5000],observed_time=30,eta=10)
