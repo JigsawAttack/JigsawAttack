@@ -68,19 +68,19 @@ def read_results(test_times=30,\
                 print(dataset,kws_extraction,kws_uni_size,known_query_number,np.average(np.array(Acc)))
 
  
-# run_RSA_with_various_known_queries(test_times=30,\
-#     Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
-#     datasets=["enron","lucene"],kws_extraction="random")
-# run_RSA_with_various_known_queries(test_times=30,\
-#     Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
-#     datasets=["enron","lucene"],kws_extraction="sorted")
+run_RSA_with_various_known_queries(test_times=30,\
+    Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
+    datasets=["enron","lucene"],kws_extraction="random")
+run_RSA_with_various_known_queries(test_times=30,\
+    Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
+    datasets=["enron","lucene"],kws_extraction="sorted")
 
-# read_results(test_times=30,\
-#     Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
-#     datasets=["enron","lucene"],kws_extraction="random")
-# read_results(test_times=30,\
-#     Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
-#     datasets=["enron","lucene"],kws_extraction="sorted")
+read_results(test_times=30,\
+    Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
+    datasets=["enron","lucene"],kws_extraction="random")
+read_results(test_times=30,\
+    Kws_uni_size=[1000],Known_queries=[5,10,25,50],\
+    datasets=["enron","lucene"],kws_extraction="sorted")
 
 
 run_RSA_with_various_known_queries(test_times=10,\
@@ -92,7 +92,7 @@ run_RSA_with_various_known_queries(test_times=10,\
 
 read_results(test_times=10,\
     Kws_uni_size=[3000],Known_queries=[15,30,75,150],\
-    datasets=["wiki"],kws_extraction="random",refspeed = 50)
+    datasets=["wiki"],kws_extraction="random")
 read_results(test_times=10,\
     Kws_uni_size=[3000],Known_queries=[15,30,75,150],\
     datasets=["wiki"],kws_extraction="sorted")

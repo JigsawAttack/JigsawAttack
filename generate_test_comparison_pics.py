@@ -266,5 +266,5 @@ def draw_comparison(dataset,test_times,qua,Query_number_per_week = [100,500,2500
 if __name__ == "__main__":
     draw_comparison("enron",30,4)
     draw_comparison("lucene",30,4)
-    draw_comparison("wiki",10,4,Query_number_per_week=[1000,5000,10000],Kws_uni_size=[1000,3000,5000])
+    draw_comparison("wiki",30,4,Query_number_per_week=[1000,5000,10000],Kws_uni_size=[1000,3000,5000])
     

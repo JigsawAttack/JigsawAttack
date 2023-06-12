@@ -7,7 +7,6 @@ def generate_against_countermeasures(dataset,countermeasure,kws_uni_size,test_ti
     RSA_result = []
     IHOP_result = []
     if countermeasure == "padding":
-        
         params = [0,500,1000,1500]
         if dataset== "wiki":
             params = [0,50000,100000,150000]
@@ -15,6 +14,13 @@ def generate_against_countermeasures(dataset,countermeasure,kws_uni_size,test_ti
     elif  countermeasure == "obfuscation":
         params = [0,0.01,0.02,0.05]
         string = "_obfuscation_q_"
+    elif countermeasure == "padding_cluster":
+        params = [1,2,4,8]
+        string = "_padding_cluster_knum_in_cluster_"
+    elif  countermeasure == "padding_seal":
+        params = [1,2,3,4]
+        string = "_padding_seal_"
+    
     for param in params:
         with open("results/test_against_countermeasures/Ours_"+dataset+\
                 string+str(param)+\
@@ -123,7 +129,14 @@ if __name__ == "__main__":
     generate_against_countermeasures("enron","padding",1000,test_times=10)
     generate_against_countermeasures("lucene","padding",1000,test_times=10)
    
-    generate_against_countermeasures("enron","obfuscation",1000,test_times=30)
-    generate_against_countermeasures("lucene","obfuscation",1000,test_times=30)
-
+    generate_against_countermeasures("enron","obfuscation",1000,test_times=10)
+    generate_against_countermeasures("lucene","obfuscation",1000,test_times=10)
     generate_against_countermeasures("wiki","obfuscation",1000,test_times=10)
+
+    generate_against_countermeasures("enron","padding_seal",1000,test_times=10)
+    generate_against_countermeasures("lucene","padding_seal",1000,test_times=10)
+    generate_against_countermeasures("wiki","padding_seal",1000,test_times=10)
+
+    generate_against_countermeasures("enron","padding_cluster",1000,test_times=10)
+    generate_against_countermeasures("lucene","padding_cluster",1000,test_times=10)
+    generate_against_countermeasures("wiki","padding_cluster",1000,test_times=10)

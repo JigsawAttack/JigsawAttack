@@ -8,7 +8,7 @@ import matplotlib.cm
 
 
 from cal_acc import *
-datasets = ["wiki_3000"]#["wiki_3000"]#["enron","lucene"]
+datasets = ["wiki_3000","enron","lucene"]
 
 def draw_3D(Acc_M_vf,Ratio_V,Ratio_F,title,path):
     plt.rcParams.update({
@@ -114,4 +114,4 @@ def draw_test_alpha(test_times):
         Acc_M = np.array(Acc_M)
         for i in range(4):
             draw_3D(Acc_M[:,:,i,:],Ratio_V,Ratio_F,title[i]+"_3D","results/test_alpha_pic_"+dataset+"/")
-draw_test_alpha(10)
+draw_test_alpha(30)

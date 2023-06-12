@@ -4,8 +4,6 @@ import os
 from tqdm import tqdm
 from cal_acc import calculate_acc_weighted
 
-#datasets = ["enron","lucene"]
-
 def test_base_conf_rec(test_times,datasets,kws_uni_size):
     if not os.path.exists("./results"):
         os.makedirs("./results")
@@ -56,5 +54,8 @@ def show(datasets,kws_uni_size):
                 print("%.2f"%(Result_all[i][j][1]*100),"\\%/",end=" ")
                 print("%.1f"%(Result_all[i][j][2]),end="$")
             print("\\\\")
-test_base_conf_rec(10,["wiki"],3000)
+
+test_base_conf_rec(30,["enron","lucene"],1000)
+show(["enron","lucene"],1000)
+test_base_conf_rec(30,["wiki"],3000)
 show(["wiki"],3000)

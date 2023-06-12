@@ -3,10 +3,11 @@ from tqdm import tqdm
 from countermeasure import *
 import time
 class Attacker:
+    ### implementations of Jigsaw and RSA
     def __init__(self,sim_kw_d,real_td_d,sim_F=None,real_F=None,\
             no_F=False,baseRec = 50,confRec=25,refinespeed = 15,\
             alpha=0.5,beta=0.4,countermeasure_params={"alg":None},real_doc_num=None):
-        #print("here at init 1",time.time())
+
         self.sim_kw_d = sim_kw_d
         self.real_td_d = real_td_d
         self.sim_F = sim_F
@@ -18,54 +19,37 @@ class Attacker:
         self.alpha = alpha
         self.beta = beta
         self.real_doc_num = real_doc_num
-        #print("here at init 2",time.time())
-        
 
-        #if countermeasure_params["alg"]== None:
-        self.sim_V = np.sum(self.sim_kw_d,axis=1)
-        
-        # else:
-        #     self.sim_V = np.sum(sim_kw_d_,axis=1)
-        #     self.sim_kw_d = sim_kw_d_
-        
         self.real_V = np.sum(self.real_td_d,axis=1)
-
-        self.sim_V = self.sim_V/len(self.sim_kw_d[0])
         self.real_V = self.real_V/len(self.real_td_d[0])
-        #self.sim_V = self.sim_V/np.sum(self.sim_V)
-        #self.real_V = self.real_V/np.sum(self.real_V)
-        #print("here at init 3",time.time())
-        
         self.real_M = np.dot(self.real_td_d,self.real_td_d.T)/len(self.real_td_d[0])
-        self.sim_M = np.dot(self.sim_kw_d,self.sim_kw_d.T)/len(self.sim_kw_d[0])
-        # if countermeasure_params["alg"] == "obfuscation":
-        #     tpr = countermeasure_params["p"]
-        #     fpr = countermeasure_params["q"]
-        #     common_elements = np.matmul(sim_kw_d,sim_kw_d.T)
-        #     common_not_elements = np.matmul(1-sim_kw_d,(1-sim_kw_d).T)
-        #     Vaux = common_elements * tpr * (tpr - fpr) + common_not_elements * fpr * (fpr - tpr) + len(sim_kw_d[0]) * tpr * fpr
-        #     np.fill_diagonal(Vaux, np.diag(common_elements) * tpr + np.diag(common_not_elements) * fpr)
-        #     Vaux = Vaux/len(sim_kw_d[0])
-        #     self.sim_M = Vaux
-        #     self.sim_V = np.diagonal(self.sim_M)
-        # elif countermeasure_params["alg"]=="padding_linear_2":
-        #     self.sim_M = np.dot(sim_kw_d,sim_kw_d.T)/len(sim_kw_d[0])
-        #print("here at init 4",time.time())
+        
+        if countermeasure_params["alg"] == "obfuscation":
+            ### Adaptions against obfuscation
+            tpr = countermeasure_params["p"]
+            fpr = countermeasure_params["q"]
+            common_elements = np.matmul(sim_kw_d,sim_kw_d.T)
+            common_not_elements = np.matmul(1-sim_kw_d,(1-sim_kw_d).T)
+            Vaux = common_elements * tpr * (tpr - fpr) + common_not_elements * fpr * (fpr - tpr) + len(sim_kw_d[0]) * tpr * fpr
+            np.fill_diagonal(Vaux, np.diag(common_elements) * tpr + np.diag(common_not_elements) * fpr)
+            Vaux = Vaux/len(sim_kw_d[0])
+            self.sim_M = Vaux
+            self.sim_V = np.diagonal(self.sim_M)
+        else:
+            self.sim_M = np.dot(self.sim_kw_d,self.sim_kw_d.T)/len(self.sim_kw_d[0])
+            self.sim_V = np.sum(self.sim_kw_d,axis=1)
+            self.sim_V = self.sim_V/len(self.sim_kw_d[0])
         self.real_doc_num = len(self.real_td_d[0])
         self.sim_doc_num = len(self.sim_kw_d[0])
-        #self.sim_kw_d = []
-        #self.real_td_d = []
-        #print("here at init 5",time.time())
         self.tdid_2_kwsid = {}
         self.tdid_2_kwsid_step1 = {}
         self.tdid_2_kwsid_step2 = {}
         self.tdid_2_kwsid_step3 = {}
         self.unrec_td_set = set([i for i in range(len(self.real_M))])
-
         self.id_known_kws=None
         self.id_queried_kws=None
-        #print("here at init 6",time.time())
     def attack_step_1(self):
+        #Jigsaw Step1:Locating and recovering the distinctive queries by Volume and/or Frequency
         D_FV = self.calculate_dVF()
         id_Diff = []
         for i in range(len(D_FV)):
@@ -73,85 +57,24 @@ class Attacker:
         id_Diff.sort(key = lambda x:x[1],reverse=True)
         top = id_Diff[:self.BaseRec]
         top_td_list = [i[0] for i in top]
-        #Step1:Recover by Volume and/or Frequency
+        
         tdid_2_kwsid = self.recover_by_VF(top_td_list)
         self.tdid_2_kwsid_step1 = tdid_2_kwsid
     def attack_step_2(self):
-        #Step2:Verify by co-occurance
+        #Jigsaw Step2:Verify by co-occurance
         tdid_2_kwsid = self.verify_by_M()
         self.tdid_2_kwsid.update(tdid_2_kwsid)
         self.tdid_2_kwsid_step2 = tdid_2_kwsid
         self.unrec_td_set = self.unrec_td_set - set(tdid_2_kwsid.keys())
     
-    def attack_step_MRSA(self):
-        #Step3:Using co-occurance to recover remaining queries
-        #the score is not changed, the already paired kws will not be paired again
-        while(len(self.unrec_td_set)>0):
-            paired_td = list(self.tdid_2_kwsid.keys())
-            paired_kw = [self.tdid_2_kwsid[i] for i in paired_td]
-            unpaired_kw = list(set([i for i in range(len(self.sim_M))]) - set(paired_kw))
-            un_td_list = list(self.unrec_td_set)
-            # A = self.real_td_d[paired_td]
-            # B = self.sim_kw_d[paired_kw]
-            # C = self.real_td_d[un_td_list]
-            # D = self.sim_kw_d[unpaired_kw]
-            # M = np.vstack((A,C))
-            # M = np.dot(M,M.T)/len(self.real_td_d[0])
-            
-
-            # M_ = np.vstack((B,D))
-            # M_ = np.dot(M_,M_.T)/len(self.sim_kw_d[0])
-
-            # M = M[:,0:len(A)][len(A):]
-            # M_ = M_[:,0:len(A)][len(A):]
-
-            M = self.real_M[un_td_list][:,paired_td]
-            M_ = self.sim_M[unpaired_kw][:,paired_kw]
-
-
-
-            Certainty = []
-            for i in range(len(M)):
-                score = -np.log(np.linalg.norm(M[i]-M_,axis=1))
-                score = sorted(score,reverse=True)
-                certainty = score[0]-score[1]
-                Certainty.append([i,certainty])
-            Certainty.sort(key = lambda x:x[1],reverse=True)
-            if len(Certainty)<self.refinespeed:
-                top_td = [Certainty[i][0] for i in range(len(Certainty))]
-            else:
-                top_td = [Certainty[i][0] for i in range(self.refinespeed)]
-            tdid_2_kwsid = {}
-            for i in range(len(top_td)):
-                kw = np.argmax(-np.log(np.linalg.norm(M[top_td[i]]-M_,axis=1)))
-                tdid_2_kwsid[un_td_list[top_td[i]]]= unpaired_kw[kw]
-            self.tdid_2_kwsid.update(tdid_2_kwsid)
-            self.tdid_2_kwsid_step3.update(tdid_2_kwsid)
-            self.unrec_td_set = self.unrec_td_set - set(tdid_2_kwsid.keys())
-        return self.tdid_2_kwsid
     def attack_step_3(self):
-        #Step3:Using co-occurance to recover remaining queries
-        # the volume and frequency are considered in score
-        # the already paired kws will not be paired again
+        #Jigsaw Step3:Using co-occurance to recover remaining queries
         while(len(self.unrec_td_set)>0):
-            #print(len(self.unrec_td_set),time.time())
             paired_td = list(self.tdid_2_kwsid.keys())
             paired_kw = [self.tdid_2_kwsid[i] for i in paired_td]
             unpaired_kw = list(set([i for i in range(len(self.sim_M))]) - set(paired_kw))
             un_td_list = list(self.unrec_td_set)
-            # A = self.real_td_d[paired_td]
-            # B = self.sim_kw_d[paired_kw]
-            # C = self.real_td_d[un_td_list]
-            # D = self.sim_kw_d[unpaired_kw]
-            # M = np.vstack((A,C))
-            # M = np.dot(M,M.T)/len(self.real_td_d[0])
-
-            # M_ = np.vstack((B,D))
-            # M_ = np.dot(M_,M_.T)/len(self.sim_kw_d[0])
-
-            # M = M[:,0:len(A)][len(A):]
-            # M_ = M_[:,0:len(A)][len(A):]
-
+            
             M = self.real_M[un_td_list][:,paired_td]
             M_ = self.sim_M[unpaired_kw][:,paired_kw]
             M = M/M.sum(axis = 1).reshape((len(M),1))
@@ -184,36 +107,16 @@ class Attacker:
         return self.tdid_2_kwsid
 
     def RSA(self):
+        ### implementations of RSA
         while(len(self.unrec_td_set)>0):
-            #print(len(self.unrec_td_set))
             paired_td = list(self.tdid_2_kwsid.keys())
             paired_kw = [self.tdid_2_kwsid[i] for i in paired_td]
             unpaired_kw = list(set([i for i in range(len(self.sim_M))]) - set(paired_kw))
             un_td_list = list(self.unrec_td_set)
-            #A = self.real_td_d[paired_td]
-            #B = self.sim_kw_d[paired_kw]
-            #C = self.real_td_d[un_td_list]
-            #D = self.sim_kw_d[unpaired_kw]
-            #M = np.vstack((A,C))
-            #M = np.dot(M,M.T)/len(self.real_td_d[0])
-
-            #M_ = np.vstack((B,D))
-            #M_ = np.dot(M_,M_.T)/len(self.sim_kw_d[0])
-
-            #M = M[:,0:len(A)][len(A):]
-            # replace following line to "M_ = M_[:,0:len(A)][len(A):]" and
-            # the already paired kws will not be paired again
-            #M_ = M_[:,0:len(A)]
-            #self.real_M = np.dot(self.real_td_d,self.real_td_d.T)/len(self.real_td_d[0])
-            #self.sim_M = np.dot(self.sim_kw_d,self.sim_kw_d.T)/len(self.sim_kw_d[0])
+            
             M = self.real_M[un_td_list][:,paired_td]
             M_ = self.sim_M[:,paired_kw]
-            # #M = self.real_M[un_td_list][:,paired_td]
-            # M_ = self.sim_M[unpaired_kw][:,paired_kw]
-            #M = M/M.sum(axis=1).reshape((len(M),1))
-            #M_ = M_/M_.sum(axis=1).reshape((len(M_),1))
- 
- 
+           
             Certainty = []
             for i in range(len(M)):
                 score = -np.log(np.linalg.norm(M[i]-M_,axis=1))
@@ -273,7 +176,6 @@ class Attacker:
         kw_M = self.sim_M[kw][:,kw]
         td_M  = td_M/td_M.sum(axis = 1).reshape((nb,1))
         kw_M  = kw_M/kw_M.sum(axis = 1).reshape((nb,1))
-        
         Dis = []
         for i in range(nb):
             Dis.append(np.linalg.norm(td_M[i]-kw_M[i]))

@@ -4,8 +4,6 @@ import os
 from tqdm import tqdm
 from cal_acc import calculate_acc_weighted
 
-
-
 def test_beta(test_times,kws_uni_size,refspeed,datasets = ["enron","lucene"],query_number_per_week=2000,weeks=50):
     if not os.path.exists("./results"):
         os.makedirs("./results")
@@ -49,5 +47,6 @@ def test_beta(test_times,kws_uni_size,refspeed,datasets = ["enron","lucene"],que
         with open("results/test_beta/"+dataset+"_"+str(kws_uni_size)+".pkl", "wb") as tf:
             pickle.dump([Beta,Acc_with_freq,Acc_without_freq],tf)
 
-test_beta(10,3000,50,datasets=["wiki"],query_number_per_week=5000,weeks=30)
+test_beta(30,1000,10,datasets=["enron","lucene"])
+test_beta(30,3000,10,datasets=["wiki"],query_number_per_week=5000,weeks=30)
                 
