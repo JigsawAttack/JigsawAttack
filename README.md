@@ -10,7 +10,7 @@ Run the files starting with "generate_" to draw the results.
 
 The codes of Jigsaw are in the fold "attack". It also contains the code of all attacks with experiments in our paper. The file "attack.py" contains the implementation of Jigsaw and RSA.  
 
-In "run_single_attack.py",  takes the parameters of an attack and simulate the attack under the given condition.
+"run_single_attack.py",  takes the parameters of an attack and simulate the attack under the given condition.
 
 "test_alpha.py": tests the first module of Jigsaw with different $\alpha$. "generate_test_alpha.py": generates the pictures for the results of "test_alpha.py".
 
@@ -28,4 +28,11 @@ In "run_single_attack.py",  takes the parameters of an attack and simulate the a
 
 "test_against_countermeasure.py": test Jigsaw, RSA, and IHOP against countermeasures. "generate_test_against_countermeasures.py": generates the pictures of comparisons when against countermeasures.
 
+
+
+"extract_info.py": prepares the necessary information for attacks.
+
+"cal_acc.py": calculate the accuracy from the attack results.
+
+"countermeasure.py": implementations of countermeasures.
 
