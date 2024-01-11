@@ -1,6 +1,8 @@
-# Implementation of Jigsaw
+# Implementations of Jigsaw
 
-The attack folder contains the code for Jigsaw.
+This is the python implementations of the attacks presented in :
+
+"Query Recovery from Easy to Hard: Jigsaw Attack against SSE"
 
 Run the python files with name starting with "test_" to simulate the attack under different situations.
 

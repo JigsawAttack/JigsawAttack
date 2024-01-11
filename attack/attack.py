@@ -2,45 +2,53 @@ import numpy as np
 from tqdm import tqdm
 from countermeasure import *
 import time
+from scipy.linalg import blas
 class Attacker:
     ### implementations of Jigsaw and RSA
     def __init__(self,sim_kw_d,real_td_d,sim_F=None,real_F=None,\
             no_F=False,baseRec = 50,confRec=25,refinespeed = 15,\
-            alpha=0.5,beta=0.4,countermeasure_params={"alg":None},real_doc_num=None):
+            alpha=0.5,beta=0.4,countermeasure_params={"alg":None},real_doc_num=None,refinespeed_exp=None):
 
-        self.sim_kw_d = sim_kw_d
-        self.real_td_d = real_td_d
+        #self.sim_kw_d = sim_kw_d
+        #self.real_td_d = real_td_d
+        len_real_d = len(real_td_d[0])
         self.sim_F = sim_F
         self.real_F = real_F
         self.no_F = no_F
         self.BaseRec = baseRec
         self.ConfRec = confRec
         self.refinespeed = refinespeed
+        self.refinespeed_exp = refinespeed_exp
         self.alpha = alpha
         self.beta = beta
         self.real_doc_num = real_doc_num
 
-        self.real_V = np.sum(self.real_td_d,axis=1)
-        self.real_V = self.real_V/len(self.real_td_d[0])
-        self.real_M = np.dot(self.real_td_d,self.real_td_d.T)/len(self.real_td_d[0])
+        self.real_V = np.sum(real_td_d,axis=1)
+        self.real_V = self.real_V/len(real_td_d[0])
+        print("Here")
+        #self.real_M = blas.sgemm(1.0,real_td_d,real_td_d.T)/len(real_td_d[0])
+        self.real_M = np.matmul(real_td_d,real_td_d.T)/len(real_td_d[0])
+        del real_td_d
         
         if countermeasure_params["alg"] == "obfuscation":
             ### Adaptions against obfuscation
             tpr = countermeasure_params["p"]
             fpr = countermeasure_params["q"]
-            common_elements = np.matmul(sim_kw_d,sim_kw_d.T)
-            common_not_elements = np.matmul(1-sim_kw_d,(1-sim_kw_d).T)
+            common_elements = blas.sgemm(1.0,sim_kw_d,sim_kw_d.T)
+            common_not_elements = blas.sgemm(1.0,1-sim_kw_d,(1-sim_kw_d).T)
             Vaux = common_elements * tpr * (tpr - fpr) + common_not_elements * fpr * (fpr - tpr) + len(sim_kw_d[0]) * tpr * fpr
             np.fill_diagonal(Vaux, np.diag(common_elements) * tpr + np.diag(common_not_elements) * fpr)
             Vaux = Vaux/len(sim_kw_d[0])
             self.sim_M = Vaux
             self.sim_V = np.diagonal(self.sim_M)
         else:
-            self.sim_M = np.dot(self.sim_kw_d,self.sim_kw_d.T)/len(self.sim_kw_d[0])
-            self.sim_V = np.sum(self.sim_kw_d,axis=1)
-            self.sim_V = self.sim_V/len(self.sim_kw_d[0])
-        self.real_doc_num = len(self.real_td_d[0])
-        self.sim_doc_num = len(self.sim_kw_d[0])
+            #self.sim_M = blas.sgemm(1.0,sim_kw_d,sim_kw_d.T)/len(sim_kw_d[0])
+            self.sim_M = np.matmul(sim_kw_d,sim_kw_d.T)/len(sim_kw_d[0])
+            self.sim_V = np.sum(sim_kw_d,axis=1)
+            self.sim_V = self.sim_V/len(sim_kw_d[0])
+        self.real_doc_num = len_real_d
+        self.sim_doc_num = len(sim_kw_d[0])
+        del sim_kw_d
         self.tdid_2_kwsid = {}
         self.tdid_2_kwsid_step1 = {}
         self.tdid_2_kwsid_step2 = {}
@@ -96,7 +104,7 @@ class Attacker:
             if len(Certainty)<self.refinespeed:
                 top_td = [Certainty[i][0] for i in range(len(Certainty))]
             else:
-                top_td = [Certainty[i][0] for i in range(self.refinespeed)]
+                top_td = [Certainty[i][0] for i in range(int(self.refinespeed))]
             tdid_2_kwsid = {}
             for i in range(len(top_td)):
                 kw = np.argmax(-np.log(np.linalg.norm(M[top_td[i]]-M_,axis=1)))
@@ -104,6 +112,8 @@ class Attacker:
             self.tdid_2_kwsid.update(tdid_2_kwsid)
             self.tdid_2_kwsid_step3.update(tdid_2_kwsid)
             self.unrec_td_set = self.unrec_td_set - set(tdid_2_kwsid.keys())
+            if self.refinespeed_exp == True:
+                self.refinespeed = self.refinespeed * 1.1
         return self.tdid_2_kwsid
 
     def RSA(self):
@@ -127,7 +137,7 @@ class Attacker:
             if len(Certainty)<self.refinespeed:
                 top_td = [Certainty[i][0] for i in range(len(Certainty))]
             else:
-                top_td = [Certainty[i][0] for i in range(self.refinespeed)]
+                top_td = [Certainty[i][0] for i in range(int(self.refinespeed))]
             tdid_2_kwsid = {}
             for i in range(len(top_td)):
                 kw = np.argmax(-np.log(np.linalg.norm(M[top_td[i]]-M_,axis=1)))
@@ -135,6 +145,8 @@ class Attacker:
             self.tdid_2_kwsid.update(tdid_2_kwsid)
             self.tdid_2_kwsid_step3.update(tdid_2_kwsid)
             self.unrec_td_set = self.unrec_td_set - set(tdid_2_kwsid.keys())
+            if self.refinespeed_exp == True:
+                self.refinespeed = self.refinespeed * 1.1
         return self.tdid_2_kwsid
 
     def calculate_dVF(self):

@@ -37,7 +37,7 @@ def get_all_for_attacks(
         total_doc,kws_dict = pickle.load(f)
     kws_list = list(kws_dict.keys())
     np.random.shuffle(total_doc)
-    #print(similar_data_p)
+    
     if similar_data_p == None:
         sim_doc = total_doc[:(int) (len(total_doc)/2)]
     else:
@@ -189,12 +189,10 @@ def get_all_for_attacks_wiki(
     known_database_size = True,
     similar_data_p = None
 ):
-    #print("Read wiki doc begin:",time.time())
+    
     ## read documents, we treat half the documents as real documents and another half as simliar data
     if dataset == "wiki":
-        #db_dir = "dataset/kws_dict_3000_sorted.pkl"
-        #with open(db_dir,"rb") as f:
-        #    kws_dict = pickle.load(f)
+        
         if user_kws_universe_size>=attacker_kws_universe_size:
             max_size = user_kws_universe_size
         else:
@@ -205,6 +203,15 @@ def get_all_for_attacks_wiki(
         elif max_size <= 5000:
             kw_dir = "dataset/kws_dict_5000_sorted.pkl"
             db_dir = "dataset/kws_list_and_doc_kws_new_5000_0.pkl"
+        elif max_size <= 10000:
+            kw_dir = "dataset/kws_dict_10000_sorted.pkl"
+            db_dir = "dataset/kws_list_and_doc_kws_new_10000_0.pkl"
+        elif max_size <= 20000:
+            kw_dir = "dataset/kws_dict_20000_sorted.pkl"
+            db_dir = "dataset/kws_list_and_doc_kws_new_20000_0.pkl"
+        elif max_size <= 30000:
+            kw_dir = "dataset/kws_dict_30000_sorted.pkl"
+            db_dir = "dataset/kws_list_and_doc_kws_new_30000_0.pkl"
         else:
             assert False
         with open(kw_dir,"rb") as f:
@@ -213,13 +220,15 @@ def get_all_for_attacks_wiki(
             kws_list,doc_kwsid = pickle.load(f)
     else:
         assert False
-    #print("Point 2:",time.time())
     np.random.shuffle(doc_kwsid)
     if similar_data_p == None:
-        sim_doc_kwsid = doc_kwsid[:30000]
+        sim_doc_kwsid = doc_kwsid[:500000]
+        #sim_doc_kwsid = doc_kwsid[:(int) (len(doc_kwsid)/2)]
     else:
         sim_doc_kwsid = doc_kwsid[:(int) (len(doc_kwsid)/2*similar_data_p)]
+    sim_doc_kwsid_len = len(sim_doc_kwsid)
     real_doc_kwsid = doc_kwsid[(int) (len(doc_kwsid)/2):]
+    real_doc_kwsid_len = len(real_doc_kwsid)
     del doc_kwsid
 
     ## Get kws universe, we suppose that the kws extraction algorithm of the user and tha attacker are the same.
@@ -266,7 +275,7 @@ def get_all_for_attacks_wiki(
                 query_freq_all_dict[q] = 1
         query_all.update(set(query.tolist()))
         query_freq_all.append(query_freq)
-    #print("Point 3:",time.time())
+   
     distinct_query_number = len(query_all)
     queried_kws = list(query_all)
     real_td_trend = np.zeros((distinct_query_number,len(query_freq_all)))
@@ -290,29 +299,28 @@ def get_all_for_attacks_wiki(
     for k in range(len(known_kws)):
         kws_id[known_kws[k]] = k
         id_kws[k] = known_kws[k]
-    #print("Point 4:",time.time())
-    ## prepare information for attack
     
-    # real_query_d = np.zeros((len(queried_kws),len(real_doc)))
-    # sim_kw_d = np.zeros((attacker_kws_universe_size,len(sim_doc)))
-    # for i in range(len(real_doc)):
-    #     for k in real_doc[i]:
-    #         if(k in query_id):
-    #             real_query_d[query_id[k]][i] = 1
-    real_query_d = np.zeros((len(queried_kws),len(real_doc_kwsid)))
-    sim_kw_d = np.zeros((len(known_kws_with_id),len(sim_doc_kwsid)))
-    #print("Point 4.1:",time.time())
-    real_kwsid_doc = real_doc_kwsid.T.astype(float)
-    sim_kwsid_doc = sim_doc_kwsid.T.astype(float)
-    #print("Point 4.2:",time.time())
+    
+    real_kwsid_doc = real_doc_kwsid.T
+    del real_doc_kwsid
+    real_query_d = np.zeros((len(queried_kws),len(real_kwsid_doc[0])),dtype=bool)
+    
     for k in range(len(known_kws_with_id)):
         if(kws_list[k] in query_id):
             real_query_d[query_id[kws_list[k]]] = real_kwsid_doc[k]
-    #print("Point 4.3:",time.time())
+    del real_kwsid_doc
+    
+   
+    
+    sim_kwsid_doc = sim_doc_kwsid.T
+    del sim_doc_kwsid
+    sim_kw_d = np.zeros((len(known_kws_with_id),len(sim_kwsid_doc[0])),dtype=bool)
     for k in range(len(known_kws_with_id)):
         sim_kw_d[k] = sim_kwsid_doc[known_kws_with_id[k][2]]
-     
-    #print("Point 5:",time.time())
+    del sim_kwsid_doc
+    sim_kw_d=sim_kw_d.astype("float32")
+    real_query_d=real_query_d.astype("float32")
+   
     com_cost_before = np.sum(np.sum(real_query_d,axis=1)*real_F)
     sto_cost_before = len(real_query_d[0])
 
@@ -338,7 +346,7 @@ def get_all_for_attacks_wiki(
     if known_database_size != True:
         index=np.where(np.sum(real_query_d,axis=0)==0)[0]
         real_query_d = np.delete(real_query_d,index,axis=1)
-    #print("Point 6:",time.time())
+    
     # get volume and total frequency for all kws
     sim_F = get_F(known_kws,kws_dict,(0,observe_weeks))
     real_F = real_F/np.sum(real_F)
@@ -354,7 +362,7 @@ def get_all_for_attacks_wiki(
         "real_F":real_F,
         "sim_V":sim_V,
         "real_V":real_V,
-        "real_doc_num":len(real_doc_kwsid),
+        "real_doc_num":real_doc_kwsid_len,
         "sim_kw_d":sim_kw_d,
         "real_query_d":real_query_d
     }
@@ -365,5 +373,4 @@ def get_all_for_attacks_wiki(
         "communication overhead":com_cost_after/com_cost_before,
         "storage overhead":sto_cost_after/sto_cost_before
     }
-    #print("Point 7:",time.time())
     return data_for_attacks,data_for_acc_cal

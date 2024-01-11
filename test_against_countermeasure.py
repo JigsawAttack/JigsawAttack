@@ -6,7 +6,7 @@ from run_single_attack import *
 import os
 def run_Ours_IHOP_and_RSA_against_countermeasure(countermeasure,test_times=1,kws_uni_size=1000,\
                                                  datasets=["enron"],kws_extraction="sorted",observe_query_number_per_week = 500,\
-                                                observe_weeks = 50,time_offset = 0,refspeed=5):
+                                                observe_weeks = 50,time_offset = 0,refspeed=5,beta=0.9):
     if not os.path.exists("./results"):
         os.makedirs("./results")
     if not os.path.exists("./results/test_against_countermeasures"):
@@ -15,7 +15,8 @@ def run_Ours_IHOP_and_RSA_against_countermeasure(countermeasure,test_times=1,kws
     for dataset in datasets:
         if countermeasure =="padding_linear_2":
             if dataset == "wiki":
-                Countermeasure_params = [{"alg":"padding_linear_2","n":0},\
+                Countermeasure_params = [
+                    {"alg":"padding_linear_2","n":0},
                 {"alg":"padding_linear_2","n":50000},
                 {"alg":"padding_linear_2","n":100000},
                 {"alg":"padding_linear_2","n":150000}]
@@ -25,27 +26,38 @@ def run_Ours_IHOP_and_RSA_against_countermeasure(countermeasure,test_times=1,kws
                 {"alg":"padding_linear_2","n":1000},
                 {"alg":"padding_linear_2","n":1500}]
         elif countermeasure == "obfuscation":
-            Countermeasure_params=[{"alg":"obfuscation","p":1,"q":0,"m":1},\
-                {"alg":"obfuscation","p":0.999,"q":0.01,"m":1},\
-                {"alg":"obfuscation","p":0.999,"q":0.02,"m":1},\
-                {"alg":"obfuscation","p":0.999,"q":0.05,"m":1}
+            if dataset == "wiki":
+
+                Countermeasure_params=[{"alg":"obfuscation","p":1,"q":0,"m":1},\
+                {"alg":"obfuscation","p":0.999,"q":0.1,"m":1},\
+                {"alg":"obfuscation","p":0.999,"q":0.2,"m":1},\
+                {"alg":"obfuscation","p":0.999,"q":0.3,"m":1}
                 ]
+            else:
+                Countermeasure_params=[{"alg":"obfuscation","p":1,"q":0,"m":1},\
+                    {"alg":"obfuscation","p":0.999,"q":0.01,"m":1},\
+                    {"alg":"obfuscation","p":0.999,"q":0.02,"m":1},\
+                    {"alg":"obfuscation","p":0.999,"q":0.05,"m":1}
+                    ]
         elif countermeasure == "padding_cluster":
-            Countermeasure_params = [{"alg":"padding_cluster","knum_in_cluster":1},\
+            Countermeasure_params = [
+                {"alg":"padding_cluster","knum_in_cluster":1},\
                 {"alg":"padding_cluster","knum_in_cluster":2},
                 {"alg":"padding_cluster","knum_in_cluster":4},
                 {"alg":"padding_cluster","knum_in_cluster":8}]
         elif countermeasure == "padding_seal":
             Countermeasure_params = [
+                {"alg":"padding_seal","n":1},
                 {"alg":"padding_seal","n":2},
                 {"alg":"padding_seal","n":3},
-                {"alg":"padding_seal","n":4}
-                {"alg":"padding_seal","n":1}
+                {"alg":"padding_seal","n":4},
+                
                 ]
         for countermeasure_params in Countermeasure_params:
             Our_Result = []
             RSA_Result = []
             IHOP_Result = []
+            Our_acc = []
             for i in tqdm(range(test_times)):
                 rsa_attack_params={
                     "alg": "RSA",
@@ -61,20 +73,28 @@ def run_Ours_IHOP_and_RSA_against_countermeasure(countermeasure,test_times=1,kws
                 our_attack_params={
                     "alg": "Ours",
                     "refinespeed":refspeed,
-                    "alpha":0.2,
-                    "beta":0.9,#0.9,
-                    "baseRec":15,#25,
-                    "confRec":10,#20,
+                    "alpha":0.1,
+                    "beta":0.9,
+                    "baseRec":15,
+                    "confRec":10,
                     "step":3,
                     "no_F":False
                 }
-                
+                if dataset == "wiki":
+                    our_attack_params["refinespeed_exp"] = True
+                    rsa_attack_params["refinespeed_exp"] = True
+                else:
+                    our_attack_params["refinespeed_exp"] = False
+                    rsa_attack_params["refinespeed_exp"] = False
 
-###################Our###################
-                
+##################Our###################
+                print(kws_uni_size,kws_uni_size,kws_extraction,observe_query_number_per_week,\
+                    observe_weeks,time_offset,dataset,
+                countermeasure_params,our_attack_params)
                 result = run_single_attack(kws_uni_size,kws_uni_size,kws_extraction,observe_query_number_per_week,\
                     observe_weeks,time_offset,dataset,
                 countermeasure_params,our_attack_params)
+                
                 data_for_acc_cal = result["data_for_acc_cal"]
 
                 correct_count,acc,correct_id,wrong_id = \
@@ -91,6 +111,7 @@ def run_Ours_IHOP_and_RSA_against_countermeasure(countermeasure,test_times=1,kws
                 print({"Ours:  dataset":dataset,"countermeasure_params":countermeasure_params,"acc":acc})
                 
                 Our_Result.append((dataset,countermeasure_params,acc,result))
+                Our_acc.append(acc)
                 
  ################RSA##############
 
@@ -105,7 +126,7 @@ def run_Ours_IHOP_and_RSA_against_countermeasure(countermeasure,test_times=1,kws
                 print({"RSA:   dataset":dataset,"countermeasure_params":countermeasure_params,"acc":acc})
                 RSA_Result.append((dataset,countermeasure_params,acc,result))
 
-# #################IHOP#################################
+################IHOP#################################
                 result = run_single_attack(kws_uni_size,kws_uni_size,kws_extraction,observe_query_number_per_week,\
                     observe_weeks,time_offset,dataset,
                 countermeasure_params,ihop_attack_params)
@@ -181,24 +202,39 @@ def run_Ours_IHOP_and_RSA_against_countermeasure(countermeasure,test_times=1,kws
                     pickle.dump(IHOP_Result,f)
     return 0
 if __name__ == "__main__":
-
+    
     run_Ours_IHOP_and_RSA_against_countermeasure("padding_linear_2",\
-        test_times=10,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted")
+        test_times=30,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted")
     run_Ours_IHOP_and_RSA_against_countermeasure("padding_linear_2",\
         test_times=10,kws_uni_size=1000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
+    run_Ours_IHOP_and_RSA_against_countermeasure("padding_linear_2",\
+        test_times=10,kws_uni_size=3000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
+    run_Ours_IHOP_and_RSA_against_countermeasure("padding_linear_2",\
+        test_times=10,kws_uni_size=5000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
 
     run_Ours_IHOP_and_RSA_against_countermeasure("obfuscation",\
-        test_times=10,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted") 
+        test_times=30,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted")
     run_Ours_IHOP_and_RSA_against_countermeasure("obfuscation",\
         test_times=10,kws_uni_size=1000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
-    
+    run_Ours_IHOP_and_RSA_against_countermeasure("obfuscation",\
+        test_times=10,kws_uni_size=3000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
+    run_Ours_IHOP_and_RSA_against_countermeasure("obfuscation",\
+        test_times=10,kws_uni_size=5000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
+
     run_Ours_IHOP_and_RSA_against_countermeasure("padding_seal",\
-        test_times=10,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted")
+        test_times=30,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted")
     run_Ours_IHOP_and_RSA_against_countermeasure("padding_seal",\
         test_times=10,kws_uni_size=1000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
-    
+    run_Ours_IHOP_and_RSA_against_countermeasure("padding_seal",\
+        test_times=10,kws_uni_size=3000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
+    run_Ours_IHOP_and_RSA_against_countermeasure("padding_seal",\
+        test_times=10,kws_uni_size=5000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
+
     run_Ours_IHOP_and_RSA_against_countermeasure("padding_cluster",\
-        test_times=10,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted")
+        test_times=30,kws_uni_size=1000,datasets=["enron","lucene"],kws_extraction="sorted")
     run_Ours_IHOP_and_RSA_against_countermeasure("padding_cluster",\
         test_times=10,kws_uni_size=1000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
-    
+    run_Ours_IHOP_and_RSA_against_countermeasure("padding_cluster",\
+        test_times=10,kws_uni_size=3000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
+    run_Ours_IHOP_and_RSA_against_countermeasure("padding_cluster",\
+        test_times=10,kws_uni_size=5000,datasets=["wiki"],kws_extraction="sorted",observe_query_number_per_week=5000,observe_weeks=30)
