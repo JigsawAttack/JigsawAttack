@@ -25,7 +25,7 @@ class Attacker:
 
         self.real_V = np.sum(real_td_d,axis=1)
         self.real_V = self.real_V/len(real_td_d[0])
-        print("Here")
+        #print("Here")
         #self.real_M = blas.sgemm(1.0,real_td_d,real_td_d.T)/len(real_td_d[0])
         self.real_M = np.matmul(real_td_d,real_td_d.T)/len(real_td_d[0])
         del real_td_d
