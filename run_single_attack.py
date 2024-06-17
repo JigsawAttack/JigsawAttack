@@ -210,4 +210,5 @@ if __name__ == "__main__":
     else:
         correct_count,acc,correct_id,wrong_id=calculate_acc_weighted(attack_results["data_for_acc_cal"],attack_results["results"])
  
-    print(acc)
+    print("Accuracy:",acc)
+    print("Run time:",attack_results["Attack_time"])
