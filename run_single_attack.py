@@ -8,6 +8,8 @@ from countermeasure import *
 import time
 from cal_acc import calculate_acc_weighted
 
+import sys
+
 def run_single_attack(
     user_kws_universe_size,
     attack_kws_universe_size,
@@ -21,7 +23,7 @@ def run_single_attack(
     similar_data_p=None
     ):
     if dataset == "enron" or dataset == "lucene":
-        print(similar_data_p)
+        #print(similar_data_p)
         data_for_attack,data_for_acc_cal = get_all_for_attacks(
             user_kws_universe_size,
             attack_kws_universe_size,
@@ -168,3 +170,44 @@ def run_single_attack(
             "countermeasure_params":countermeasure_params
         }
     return attack_results
+
+
+if __name__ == "__main__":
+
+    attack_name = "Jigsaw"
+    kws_universe_size = 500
+    dataset = "enron"
+    args = sys.argv[1:]
+    params = {}
+    for arg in args:
+        key, value = arg.split('=')
+        params[key] = value
+    if 'attack' in params:
+        attack_name = params['attack']
+    if 'dataset' in params:
+        dataset = params['dataset']
+    if 'kws_universe_size' in params:
+        kws_universe_size = int(params['kws_universe_size'])
+    if attack_name=="Jigsaw":
+        attack_params = {"alg":"Ours","alpha":0.3,"beta":0.9,"step":3,\
+        "baseRec":45,"confRec":35,\
+        "no_F":False,"refinespeed":15}
+    elif attack_name == "RSA":
+        attack_params = {"alg":"RSA","known_query_number":15,"refinespeed":15}
+    elif attack_name == "SAP":
+        attack_params = {"alg":"Sap","alpha":0.5}
+    elif attack_name == "IHOP":
+        attack_params = {"alg":"IHOP","niters":500,"pfree":0.25,"no_F":False}
+    elif attack_name == "Graphm":
+        attack_params = {"alg":"Graphm","alpha":0,"match_alg":"PATH"}
+    else:
+        print("Wrong Attack Name!")
+    attack_results = run_single_attack(kws_universe_size,kws_universe_size,"sorted",500,50,50,dataset,{"alg":None},attack_params)
+    if attack_name == "Jigsaw":
+        correct_count,acc,correct_id,wrong_id=calculate_acc_weighted(attack_results["data_for_acc_cal"],attack_results["results"][2])
+    elif attack_name=="RSA":
+        correct_count,acc,correct_id,wrong_id=calculate_acc_weighted(attack_results["data_for_acc_cal"],attack_results["results"][0])
+    else:
+        correct_count,acc,correct_id,wrong_id=calculate_acc_weighted(attack_results["data_for_acc_cal"],attack_results["results"])
+ 
+    print(acc)
