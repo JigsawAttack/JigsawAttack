@@ -4,11 +4,11 @@ from tqdm import tqdm
 
 import numpy as np
 kws_extraction = "sorted"
-kws_universe_size = 1000
+kws_universe_size = 3000
 
 print("read kws dict:")
 time1 = time.time()
-with open("dataset/wiki_kws_dict.pkl","rb") as f:
+with open("./wiki_kws_dict.pkl","rb") as f:
     kws_dict = pickle.load(f)
 print(time.time() - time1)
 
@@ -29,7 +29,7 @@ with open("kws_dict_"+str(kws_universe_size)+"_sorted.pkl", "wb") as f:
 
 print("read doc")
 time1 = time.time()
-with open("dataset/wiki_doc_0.pkl","rb") as f:
+with open("./wiki_doc_0.pkl","rb") as f:
     doc = pickle.load(f)
 print(time.time() - time1)
 print("doc number:",len(doc))
@@ -42,6 +42,10 @@ for i in tqdm(range(len(doc))):
             doc_kwsid[i][j]=1
 
 time1 = time.time()
-with open("dataset/kws_list_and_doc_kws_new_"+str(kws_universe_size)+"_0.pkl", "wb") as f:
-    pickle.dump([kws_list,doc_kwsid],f)
+if kws_universe_size <= 3000:
+    with open("./kws_list_and_doc_kws_all_new_0.pkl", "wb") as f:
+        pickle.dump([kws_list,doc_kwsid],f)
+else:
+    with open("./kws_list_and_doc_kws_new_"+str(kws_universe_size)+"_0.pkl", "wb") as f:
+        pickle.dump([kws_list,doc_kwsid],f)
 print(time.time() - time1)
