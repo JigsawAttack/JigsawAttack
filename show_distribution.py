@@ -142,7 +142,7 @@ for i in tqdm(range(1)):
     Results = show_results(correct_id,wrong_id,real_F,real_V,high_frequency_ratio,high_volume_ratio,is_print=True)
     for i in range(4):
         Acc[i].append(Results[i]["correct_count"]/Results[i]["qcount"])
-print(np.average(np.array(Acc), axis=1))
-
-show_distribution(correct_id,real_F,real_V,high_frequency_ratio,high_volume_ratio,dataset,save=True)
-show_distribution_2(correct_id,real_F,real_V,high_frequency_ratio,high_volume_ratio,dataset,save=True)
+    print(np.average(np.array(Acc), axis=1))
+    
+    show_distribution(correct_id,real_F,real_V,high_frequency_ratio,high_volume_ratio,dataset,save=True)
+    show_distribution_2(correct_id,real_F,real_V,high_frequency_ratio,high_volume_ratio,dataset,save=True)
