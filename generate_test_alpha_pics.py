@@ -70,7 +70,7 @@ def draw_test_alpha(test_times):
         Acc_quadrants = []
         Data_for_qudrants = []
         for i in range(test_times):
-            with open("results/test_alpha/"+dataset+"_3000_10_"+str(i)+".pkl", "rb") as tf:
+            with open("results/test_alpha/"+dataset+"_3000__1000_"+str(test_times)+"_"+str(i)+".pkl", "rb") as tf:
                 Alpha,Result = pickle.load(tf)
                 acc_all = []
                 acc_quadrants = [[],[],[],[]]
