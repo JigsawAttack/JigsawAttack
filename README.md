@@ -49,3 +49,18 @@ The codes of Jigsaw are in the folder ``attack``. It also contains the code of a
 
 ``countermeasure.py``: implementations of countermeasures.
 
+## About running Graphm
+
+To test Graphm, please follow these steps:
+
+install the required package by "sudo apt-get install libgsl-dev".
+
+We encountered some other bugs during the installation of the Graphm package. We solved them by making the following changes.
+
+1. In graphm.h, commenting out line 70, i.e. //double abs(double);.
+
+2. In graphm.cpp, commenting out line 279 and 280, i.e. //double abs(double x) //{return (x>0)?x:-x;}.
+
+3. After making these changes, create a folder named "src_graphm" under the main folder of Jigsaw and place the folder "graphm-0.51" inside "src_graphm".
+
+
