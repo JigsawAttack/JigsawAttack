@@ -30,7 +30,7 @@ The codes of Jigsaw are in the folder ``attack``. It also contains the code of a
 
 ``test_durability.py``: tests Jigsaw with different $\tau$, where $\tau$ is the time offset between the observed frequency and the prior knowledge.
 
-``show_distribution.py``: runs the simple attack and draws the distribution of qieries.
+``show_distribution.py``: runs the simple attack and draws the distribution of qieries. To test the show_distribution.py on other datasets, please change the line 126 to "dataset = "wiki"" or "dataset = "lucene"".
 
 ``test_comparison.py``: compares the Jigsaw, RSA, IHOP, SAP, and Graphm under different conditions. ``generate_test_comparison_pics`` generates the pictures of above comparisons.
 
