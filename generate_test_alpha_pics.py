@@ -8,7 +8,7 @@ import matplotlib.cm
 
 
 from cal_acc import *
-datasets = ["wiki_3000","enron","lucene"]
+datasets = ["wiki","enron","lucene"]
 
 def draw_3D(Acc_M_vf,Ratio_V,Ratio_F,title,path):
     plt.rcParams.update({
@@ -66,11 +66,14 @@ def draw_alpha_one_quadrant(Alpha,acc,title,path):
 
 def draw_test_alpha(test_times):
     for dataset in datasets:
+        keyword_uni_size = 1000
+        if dataset == "wiki":
+            keyword_uni_size = 3000
         Acc_all = []
         Acc_quadrants = []
         Data_for_qudrants = []
         for i in range(test_times):
-            with open("results/test_alpha/"+dataset+"_3000__1000_"+str(test_times)+"_"+str(i)+".pkl", "rb") as tf:
+            with open("results/test_alpha/"+dataset+"_3000_"+str(keyword_uni_size)+"_"+str(test_times)+"_"+str(i)+".pkl", "rb") as tf:
                 Alpha,Result = pickle.load(tf)
                 acc_all = []
                 acc_quadrants = [[],[],[],[]]
